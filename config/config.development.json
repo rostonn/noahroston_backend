@@ -1,0 +1,14 @@
+{	
+	"db_username":"root",
+	"db_password":"",
+	"db_name":"noahroston",
+	"port":":8080",
+	"amazonClientId":"amzn1.application-oa2-client.b303d8675b0e47dda8c31fcefbf04785",
+	"amazonClientSecret":"82c8f408499bc6d1f4d6df84a30313bbec03f860bf261419141247d82a503f9b",
+	"amazonAccessTokenURL":"https://api.amazon.com/auth/o2/token",
+	"amazonProfileURL": "https://api.amazon.com/user/profile",
+	"amazonRedirectURI": "http://localhost:3000/redirect/amzn",
+
+	"ipStackApiKey": "82de8bc997a8dc13efcf9b77665bac40",
+	"privateKeyPath": "/Users/noahroston/.ssh/ec_key"
+}
