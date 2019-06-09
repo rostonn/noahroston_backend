@@ -10,5 +10,5 @@
 	"amazonRedirectURI": "http://localhost:3000/redirect/amzn",
 
 	"ipStackApiKey": "82de8bc997a8dc13efcf9b77665bac40",
-	"privateKeyPath": "/Users/noahroston/.ssh/ec_key"
+	"privateKeyPath": "/Users/noahroston/.ssh/ec_key111"
 }
