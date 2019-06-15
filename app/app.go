@@ -16,5 +16,7 @@ type Configuration struct {
 	AmazonRedirectURI    string `json:"amazonRedirectURI"`
 	IpStackApiKey        string `json:"ipStackApiKey"`
 	PrivateKeyPath       string `json:"privateKeyPath"`
+	PublicKeyPath        string `json:"publicKeyPath"`
 	PrivateKey           *ecdsa.PrivateKey
+	PublicKey            *ecdsa.PublicKey
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -34,6 +35,10 @@ func main() {
 	if env == "" {
 		log.Fatal("PROFILE env variable not set")
 	}
+	configPath := strings.ToLower(os.Getenv("CONFIG_PATH"))
+	if configPath == "" {
+		log.Fatal("CONFIG_PATH env variable not set")
+	}
 
 	logger, err := createLogger(env)
 	if err != nil {
@@ -41,11 +46,11 @@ func main() {
 	}
 	logger.Debug("Logger Created")
 
-	configFilename := "config/config." + env + ".json"
+	configFilename := configPath + "config." + env + ".json"
 
 	file, err := os.Open(configFilename)
 	if err != nil {
-		log.Fatal("Config Filename doesn't exist", configFilename)
+		log.Fatal("Config Filename doesn't exist ", configFilename)
 	}
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&configuration)
@@ -63,6 +68,31 @@ func main() {
 		logger.Error("Private Key ErRR")
 		log.Fatal(sshErr)
 	}
+
+	sshPublicKeyBytes, e := ioutil.ReadFile(configuration.PublicKeyPath)
+	if e != nil {
+		logger.Error("Public Key ErRR")
+		log.Fatal(sshErr)
+	}
+
+	fmt.Println(string(sshPublicKeyBytes))
+
+	// s := []byte("AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBBIFCofI85aeUfgJ/qxY0f6aKCQNwCBA2GOyAk6y1+qqG4Rbw6OI67ZWvgLO7B/gvFtyZJLFThZHyaP38eO6qbc=")
+	// verifyKey, err := jwt.ParseRSAPublicKeyFromPEM(sshPublicKeyBytes)
+	// 	s := []byte(`
+	// -----BEGIN PUBLIC KEY-----
+	// AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBBIFCofI85aeUfgJ/qxY0f6aKCQNwCBA2GOyAk6y1+qqG4Rbw6OI67ZWvgLO7B/gvFtyZJLFThZHyaP38eO6qbc=
+	// -----END PUBLIC KEY-----`)
+
+	verifyKey, err := jwt.ParseECPublicKeyFromPEM(sshPublicKeyBytes)
+
+	if err != nil {
+		fmt.Println("Public Key Error")
+		log.Fatal(err)
+	}
+	fmt.Println(verifyKey)
+	// configuration.PublicKeyBytes = sshPublicKeyBytes
+	configuration.PublicKey = verifyKey
 	configuration.PrivateKey = privateKey
 
 	a := App{}

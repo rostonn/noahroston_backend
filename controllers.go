@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/rostonn/noahroston_backend/oauth"
@@ -48,6 +49,7 @@ func (a *App) loginUser(w http.ResponseWriter, r *http.Request) {
 func (a *App) loginWithAmazon(w http.ResponseWriter, r *http.Request, code string) {
 	user, userError := oauth.LoginWithAmazon(code, a.config, a.Zlog)
 	if userError != nil {
+		a.Zlog.Error("Returning error from loginWithAmazon")
 		respondWithError(w, userError.Code, userError.Message)
 	}
 
@@ -60,4 +62,33 @@ func (a *App) loginWithAmazon(w http.ResponseWriter, r *http.Request, code strin
 	fmt.Println(user)
 
 	a.createAndReturnJWT(w, r, user)
+}
+
+func (a *App) checkToken(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Checking token request type: " + r.Method)
+
+	authHeader := r.Header.Get("Authorization")
+
+	fmt.Println("Authorization Header", authHeader)
+
+	if authHeader == "" {
+		respondWithError(w, 401, "UNAUTHORIZED")
+	}
+
+	authArr := strings.Split(authHeader, " ")
+
+	if len(authArr) != 2 {
+		respondWithError(w, 400, "BAD REQUEST")
+	}
+
+	if authArr[0] != "Bearer" {
+		respondWithError(w, 400, "BAD REQUEST")
+	}
+
+	token := authArr[1]
+
+	a.Zlog.Debug("Token " + token)
+
+	a.validateJWT(w, r, token)
+
 }

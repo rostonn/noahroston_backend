@@ -23,7 +23,8 @@ type App struct {
 
 func (a *App) Initialize(config app.Configuration, logger *zap.Logger) {
 	a.Zlog = logger
-	connectionString := fmt.Sprintf("%s:%s@/%s", config.DbUsername, config.DbPassword, config.Dbname)
+	// db, err := sql.Open("mysql", "db_user:password@tcp(localhost:3306)/my_db")
+	connectionString := fmt.Sprintf("%s:%s@%s", config.DbUsername, config.DbPassword, config.Dbname)
 	var err error
 
 	a.Zlog.Debug("DB INFO",
@@ -34,6 +35,12 @@ func (a *App) Initialize(config app.Configuration, logger *zap.Logger) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	err = a.DB.Ping()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	a.Router = mux.NewRouter()
 
 	a.initializeRoutes()
@@ -41,8 +48,8 @@ func (a *App) Initialize(config app.Configuration, logger *zap.Logger) {
 }
 
 func (a *App) Run(addr string) {
-	headersOk := handlers.AllowedHeaders([]string{"Content-Type"})
-	originsOk := handlers.AllowedOrigins([]string{"http://localhost:3000"})
+	headersOk := handlers.AllowedHeaders([]string{"Content-Type", "Authorization"})
+	originsOk := handlers.AllowedOrigins([]string{"*"})
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
 	log.Fatal(http.ListenAndServe(addr, handlers.CORS(headersOk, originsOk, methodsOk)(a.Router)))
