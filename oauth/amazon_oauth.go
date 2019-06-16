@@ -12,10 +12,10 @@ import (
 	"go.uber.org/zap"
 )
 
-func LoginWithAmazon(code string, config app.Configuration, logger *zap.Logger) (*models.User, *oauthError) {
+func LoginWithAmazon(code string, config app.Configuration, logger *zap.Logger) (*models.User, *OauthError) {
 	logger.Debug("loginWithAmazon: amazon token", zap.String("code", code))
 	user := &models.User{}
-	oauthError := &oauthError{}
+	oauthError := &OauthError{}
 
 	amazonTokenRequestMap := map[string]interface{}{
 		"grant_type":    "authorization_code",

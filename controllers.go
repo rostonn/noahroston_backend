@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/rostonn/noahroston_backend/models"
+
 	"github.com/gorilla/mux"
 	"github.com/rostonn/noahroston_backend/oauth"
 	"go.uber.org/zap"
@@ -38,6 +40,10 @@ func (a *App) loginUser(w http.ResponseWriter, r *http.Request) {
 	switch provider {
 	case "amazon":
 		a.loginWithAmazon(w, r, code)
+	case "google":
+		a.loginWithGoogle(w, r, code)
+	case "facebook":
+		a.loginWithFacebook(w, r, code)
 	default:
 		fmt.Println("Goes Here respond with error?")
 		respondWithError(w, 400, "Bad Request - Provider "+provider+" unknown")
@@ -48,8 +54,45 @@ func (a *App) loginUser(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) loginWithAmazon(w http.ResponseWriter, r *http.Request, code string) {
 	user, userError := oauth.LoginWithAmazon(code, a.config, a.Zlog)
+	a.logUserIn(w, r, user, userError)
+	// if userError != nil {
+	// 	a.Zlog.Error("Returning error from loginWithAmazon")
+	// 	respondWithError(w, userError.Code, userError.Message)
+	// }
+
+	// err := user.LoginUser(a.DB)
+	// if err != nil {
+	// 	respondWithError(w, 500, err.Error())
+	// }
+
+	// a.Zlog.Debug("UserID: " + string(user.ID))
+	// fmt.Println(user)
+
+	// a.createAndReturnJWT(w, r, user)
+}
+
+func (a *App) loginWithGoogle(w http.ResponseWriter, r *http.Request, code string) {
+	user, userError := oauth.LoginWithGoogle(code, a.config, a.Zlog)
+	a.logUserIn(w, r, user, userError)
+	// if userError != nil {
+	// 	a.Zlog.Error("Returning error from loginWithAmazon")
+	// 	respondWithError(w, userError.Code, userError.Message)
+	// }
+
+	// err := user.LoginUser(a.DB)
+	// if err != nil {
+	// 	respondWithError(w, 500, err.Error())
+	// }
+
+	// a.Zlog.Debug("UserID: " + string(user.ID))
+	// fmt.Println(user)
+
+	// a.createAndReturnJWT(w, r, user)
+}
+
+func (a *App) logUserIn(w http.ResponseWriter, r *http.Request, user *models.User, userError *oauth.OauthError) {
 	if userError != nil {
-		a.Zlog.Error("Returning error from loginWithAmazon")
+		a.Zlog.Error("Login Error")
 		respondWithError(w, userError.Code, userError.Message)
 	}
 
@@ -62,6 +105,25 @@ func (a *App) loginWithAmazon(w http.ResponseWriter, r *http.Request, code strin
 	fmt.Println(user)
 
 	a.createAndReturnJWT(w, r, user)
+}
+
+func (a *App) loginWithFacebook(w http.ResponseWriter, r *http.Request, code string) {
+	user, userError := oauth.LoginWithFacebook(code, a.config, a.Zlog)
+	a.logUserIn(w, r, user, userError)
+	// if userError != nil {
+	// 	a.Zlog.Error("Returning error from loginWithAmazon")
+	// 	respondWithError(w, userError.Code, userError.Message)
+	// }
+
+	// err := user.LoginUser(a.DB)
+	// if err != nil {
+	// 	respondWithError(w, 500, err.Error())
+	// }
+
+	// a.Zlog.Debug("UserID: " + string(user.ID))
+	// fmt.Println(user)
+
+	// a.createAndReturnJWT(w, r, user)
 }
 
 func (a *App) checkToken(w http.ResponseWriter, r *http.Request) {

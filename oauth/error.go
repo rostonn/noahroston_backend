@@ -1,6 +1,6 @@
 package oauth
 
-type oauthError struct {
+type OauthError struct {
 	Error   error
 	Message string
 	Code    int
