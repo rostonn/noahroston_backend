@@ -6,19 +6,19 @@ import (
 )
 
 type User struct {
-	ID               int               `json:"-"`
-	Email            string            `json:"email"`
-	Name             string            `json:"name"`
-	LastOauth        string            `json:"lastOauth"`
-	CreatedTs        string            `json:"createdTs"`
-	UpdatedTs        string            `json:"updatedTs"`
-	LoginCount       int               `json:"-"`
-	UserLoginRecords []UserLoginRecord `json:"userLoginRecord"`
+	ID              int             `json:"-"`
+	Email           string          `json:"email"`
+	Name            string          `json:"name,omitempty"`
+	LastOauth       string          `json:"lastOauth"`
+	CreatedTs       string          `json:"createdTs"`
+	UpdatedTs       string          `json:"updatedTs"`
+	LoginCount      int             `json:"-"`
+	UserLoginRecord UserLoginRecord `json:"userLoginRecord"`
 }
 
 type UserLoginRecord struct {
 	UserID        int     `json:"-"`
-	IpAddress     []byte  `json:"ipAddress"`
+	IpAddress     string  `json:"ipAddress"`
 	CountryCode   string  `json:"country_code"`
 	CountryName   string  `json:"country_name"`
 	RegionCode    string  `json:"region_code"`
@@ -28,7 +28,7 @@ type UserLoginRecord struct {
 	Latitude      float64 `json:"latitude"`
 	Longitude     float64 `json:"longitude"`
 	OauthProvider string  `json:"oauthProvider"`
-	CreatedTs     string  `json:"createdTs"`
+	CreatedTs     string  `json:"createdTs,,omitempty"`
 }
 
 func (u *User) createUser(db *sql.DB) error {

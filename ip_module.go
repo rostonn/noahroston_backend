@@ -13,7 +13,7 @@ func getIpAddressInfo(accessKey, ipAddress string) models.UserLoginRecord {
 	var ip models.UserLoginRecord
 
 	var url string
-	if ipAddress == "" {
+	if ipAddress == "127.0.0.1" {
 		fmt.Println("Local IP Address ")
 		url = "http://api.ipstack.com/check?access_key=" + accessKey
 	} else {

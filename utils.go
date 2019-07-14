@@ -25,7 +25,7 @@ func getIPAdress(r *http.Request) string {
 			return ip
 		}
 	}
-	return ""
+	return "127.0.0.1"
 }
 
 //ipRange - a structure that holds the start and end of a range of ip addresses

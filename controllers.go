@@ -44,6 +44,8 @@ func (a *App) loginUser(w http.ResponseWriter, r *http.Request) {
 		a.loginWithGoogle(w, r, code)
 	case "facebook":
 		a.loginWithFacebook(w, r, code)
+	case "test":
+		a.loginWithTester(w, r)
 	default:
 		fmt.Println("Goes Here respond with error?")
 		respondWithError(w, 400, "Bad Request - Provider "+provider+" unknown")
@@ -52,42 +54,21 @@ func (a *App) loginUser(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func (a *App) loginWithTester(w http.ResponseWriter, r *http.Request) {
+	user := &models.User{}
+	user.LastOauth = "TEST"
+	user.Email = "tester@test.com"
+	a.logUserIn(w, r, user, nil)
+}
+
 func (a *App) loginWithAmazon(w http.ResponseWriter, r *http.Request, code string) {
 	user, userError := oauth.LoginWithAmazon(code, a.config, a.Zlog)
 	a.logUserIn(w, r, user, userError)
-	// if userError != nil {
-	// 	a.Zlog.Error("Returning error from loginWithAmazon")
-	// 	respondWithError(w, userError.Code, userError.Message)
-	// }
-
-	// err := user.LoginUser(a.DB)
-	// if err != nil {
-	// 	respondWithError(w, 500, err.Error())
-	// }
-
-	// a.Zlog.Debug("UserID: " + string(user.ID))
-	// fmt.Println(user)
-
-	// a.createAndReturnJWT(w, r, user)
 }
 
 func (a *App) loginWithGoogle(w http.ResponseWriter, r *http.Request, code string) {
 	user, userError := oauth.LoginWithGoogle(code, a.config, a.Zlog)
 	a.logUserIn(w, r, user, userError)
-	// if userError != nil {
-	// 	a.Zlog.Error("Returning error from loginWithAmazon")
-	// 	respondWithError(w, userError.Code, userError.Message)
-	// }
-
-	// err := user.LoginUser(a.DB)
-	// if err != nil {
-	// 	respondWithError(w, 500, err.Error())
-	// }
-
-	// a.Zlog.Debug("UserID: " + string(user.ID))
-	// fmt.Println(user)
-
-	// a.createAndReturnJWT(w, r, user)
 }
 
 func (a *App) logUserIn(w http.ResponseWriter, r *http.Request, user *models.User, userError *oauth.OauthError) {
@@ -110,20 +91,6 @@ func (a *App) logUserIn(w http.ResponseWriter, r *http.Request, user *models.Use
 func (a *App) loginWithFacebook(w http.ResponseWriter, r *http.Request, code string) {
 	user, userError := oauth.LoginWithFacebook(code, a.config, a.Zlog)
 	a.logUserIn(w, r, user, userError)
-	// if userError != nil {
-	// 	a.Zlog.Error("Returning error from loginWithAmazon")
-	// 	respondWithError(w, userError.Code, userError.Message)
-	// }
-
-	// err := user.LoginUser(a.DB)
-	// if err != nil {
-	// 	respondWithError(w, 500, err.Error())
-	// }
-
-	// a.Zlog.Debug("UserID: " + string(user.ID))
-	// fmt.Println(user)
-
-	// a.createAndReturnJWT(w, r, user)
 }
 
 func (a *App) checkToken(w http.ResponseWriter, r *http.Request) {

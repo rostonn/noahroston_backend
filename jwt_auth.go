@@ -10,25 +10,17 @@ import (
 )
 
 type CustomClaims struct {
-	User            *models.User           `json:"user"`
-	UserLoginRecord models.UserLoginRecord `json:"userLoginRecord"`
+	User *models.User `json:"user"`
 	jwt.StandardClaims
 }
 
 func (a *App) validateJWT(w http.ResponseWriter, r *http.Request, token string) {
 	a.Zlog.Debug("Validating JWT " + token)
 
-	// fmt.Println(a.config.PrivateKey)
-
-	// fmt.Println("Public Key Bytes")
-	// fmt.Println(a.config.PublicKeyBytes)
-
 	var myClaims CustomClaims
 	t, err := jwt.ParseWithClaims(token, &myClaims, func(token *jwt.Token) (interface{}, error) {
 		return a.config.PublicKey, nil
 	})
-
-	// fmt.Println("claims ...", t)
 
 	if err != nil {
 		fmt.Println(err)
@@ -36,13 +28,6 @@ func (a *App) validateJWT(w http.ResponseWriter, r *http.Request, token string) 
 		respondWithError(w, 401, "Error Creating JWT")
 		return
 	}
-	// validErr := t.Claims.Valid
-	// if validErr != nil {
-	// 	fmt.Println("Invalid JWT??")
-	// 	fmt.Println(validErr)
-	// 	respondWithError(w, 401, "Invalid JWT")
-	// 	return
-	// }
 
 	fmt.Println("Expires At", myClaims.ExpiresAt)
 	fmt.Println("Check Expires", myClaims.VerifyExpiresAt)
@@ -52,7 +37,6 @@ func (a *App) validateJWT(w http.ResponseWriter, r *http.Request, token string) 
 
 	fmt.Println(t.Claims)
 
-	// w.WriteHeader(200)
 	w.Write(nil)
 }
 
@@ -63,6 +47,9 @@ func (a *App) createAndReturnJWT(w http.ResponseWriter, r *http.Request, user *m
 	a.Zlog.Info("IP " + ipAddress)
 
 	userLoginRecord := getIpAddressInfo(a.config.IpStackApiKey, ipAddress)
+
+	userLoginRecord.IpAddress = ipAddress
+
 	userLoginRecord.OauthProvider = user.LastOauth
 	userLoginRecord.UserID = user.ID
 
@@ -72,10 +59,11 @@ func (a *App) createAndReturnJWT(w http.ResponseWriter, r *http.Request, user *m
 	}
 
 	a.Zlog.Debug("Creating JWT")
+	user.UserLoginRecord = userLoginRecord
 
 	claims := CustomClaims{
 		user,
-		userLoginRecord,
+
 		jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Minute * 3).Unix(),
 			Issuer:    "noahroston",
