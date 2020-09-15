@@ -2,7 +2,6 @@ package oauth
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -11,15 +10,15 @@ import (
 	"go.uber.org/zap"
 )
 
-func LoginWithGoogle(code string, config app.Configuration, logger *zap.Logger) (*models.User, *OauthError) {
-	logger.Debug("loginWithGoogle: google token", zap.String("code", code))
+func LoginWithGoogle(code string, config app.Configuration) (*models.User, *OauthError) {
+	zap.S().Debug("loginWithGoogle: google token", zap.String("code", code))
 	user := &models.User{}
 	oauthError := &OauthError{}
 
 	resp, err := http.Get("https://oauth2.googleapis.com/tokeninfo?id_token=" + code)
 
 	if err != nil {
-		logger.Error("Get to google token url")
+		zap.S().Error("Get to google token url")
 		// panic(err)
 		oauthError.Code = 500
 		oauthError.Message = "Get to google access token url"
@@ -34,10 +33,10 @@ func LoginWithGoogle(code string, config app.Configuration, logger *zap.Logger) 
 	var userObj map[string]interface{}
 	err = json.Unmarshal(body, &userObj)
 
-	fmt.Println(userObj)
+	zap.S().Debug(userObj)
 
 	b, err := json.MarshalIndent(userObj, "", "  ")
-	logger.Info("Google User " + string(b))
+	zap.S().Info("Google User " + string(b))
 
 	user.LastOauth = "GOOGLE"
 	email, _ := userObj["email"].(string)

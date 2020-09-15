@@ -3,7 +3,6 @@ package oauth
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -12,8 +11,8 @@ import (
 	"go.uber.org/zap"
 )
 
-func LoginWithAmazon(code string, config app.Configuration, logger *zap.Logger) (*models.User, *OauthError) {
-	logger.Debug("loginWithAmazon: amazon token", zap.String("code", code))
+func LoginWithAmazon(code string, config app.Configuration) (*models.User, *OauthError) {
+	zap.S().Debug("loginWithAmazon: amazon token", zap.String("code", code))
 	user := &models.User{}
 	oauthError := &OauthError{}
 
@@ -33,7 +32,7 @@ func LoginWithAmazon(code string, config app.Configuration, logger *zap.Logger) 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		logger.Error("Post to amazon access token url")
+		zap.S().Error("Post to amazon access token url")
 		// panic(err)
 		oauthError.Code = 500
 		oauthError.Message = "Post to amazon access token url"
@@ -55,17 +54,17 @@ func LoginWithAmazon(code string, config app.Configuration, logger *zap.Logger) 
 		return nil, oauthError
 	}
 
-	fmt.Println("access", accessToken)
-	fmt.Println(amazonResponseMap)
+	zap.S().Info("access", accessToken)
+	zap.S().Info(amazonResponseMap)
 
 	// Make request to get user info
 	userInfoReq, err := http.NewRequest("GET", config.AmazonProfileURL, nil)
 	userInfoReq.Header.Set("Accept", "application/json")
 	userInfoReq.Header.Set("x-amz-access-token", accessToken)
 
-	logger.Debug("Amazon Acess Token: " + accessToken)
+	zap.S().Debug("Amazon Acess Token: " + accessToken)
 	if err != nil {
-		logger.Error("Amazon access error", zap.Error(err))
+		zap.S().Error("Amazon access error", zap.Error(err))
 		oauthError.Error = err
 		oauthError.Code = 500
 		oauthError.Message = "Amazon unmarshall error"
@@ -74,7 +73,7 @@ func LoginWithAmazon(code string, config app.Configuration, logger *zap.Logger) 
 
 	resp, err = client.Do(userInfoReq)
 	if err != nil {
-		logger.Error("Amazon Request Failed", zap.Error(err))
+		zap.S().Error("Amazon Request Failed", zap.Error(err))
 		oauthError.Error = err
 		oauthError.Code = 500
 		oauthError.Message = "Amazon unmarshall error"
@@ -87,8 +86,8 @@ func LoginWithAmazon(code string, config app.Configuration, logger *zap.Logger) 
 	err = json.Unmarshal(body, &userObj)
 
 	b, err := json.MarshalIndent(userObj, "", "  ")
-	logger.Info("AMZN User " + string(b))
-	fmt.Println("AMZN User", string(b))
+	zap.S().Info("AMZN User " + string(b))
+	zap.S().Info("AMZN User", string(b))
 
 	user.LastOauth = "AMAZON"
 

@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -23,19 +22,22 @@ func (a *App) loginUser(w http.ResponseWriter, r *http.Request) {
 	provider := vars["provider"]
 	if provider == "" {
 		respondWithError(w, 400, "Bad Request - Provider cannot be nil")
+		return
 	}
 	var m map[string]string
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&m)
 	if err != nil {
 		respondWithError(w, 400, "Bad Request - Body must be json")
+		return
 	}
 
 	code := m["code"]
 	if code == "" {
 		respondWithError(w, 400, "Bad Request - Code must not be empty")
+		return
 	}
-	a.Zlog.Info("LoginUser Code", zap.String("code", code))
+	zap.S().Info("LoginUser Code", zap.String("code", code))
 
 	switch provider {
 	case "amazon":
@@ -47,11 +49,8 @@ func (a *App) loginUser(w http.ResponseWriter, r *http.Request) {
 	case "test":
 		a.loginWithTester(w, r)
 	default:
-		fmt.Println("Goes Here respond with error?")
 		respondWithError(w, 400, "Bad Request - Provider "+provider+" unknown")
 	}
-	// Switch provider and forward request and response on
-
 }
 
 func (a *App) loginWithTester(w http.ResponseWriter, r *http.Request) {
@@ -62,18 +61,18 @@ func (a *App) loginWithTester(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) loginWithAmazon(w http.ResponseWriter, r *http.Request, code string) {
-	user, userError := oauth.LoginWithAmazon(code, a.config, a.Zlog)
+	user, userError := oauth.LoginWithAmazon(code, a.config)
 	a.logUserIn(w, r, user, userError)
 }
 
 func (a *App) loginWithGoogle(w http.ResponseWriter, r *http.Request, code string) {
-	user, userError := oauth.LoginWithGoogle(code, a.config, a.Zlog)
+	user, userError := oauth.LoginWithGoogle(code, a.config)
 	a.logUserIn(w, r, user, userError)
 }
 
 func (a *App) logUserIn(w http.ResponseWriter, r *http.Request, user *models.User, userError *oauth.OauthError) {
 	if userError != nil {
-		a.Zlog.Error("Login Error")
+		zap.S().Error("Login Error")
 		respondWithError(w, userError.Code, userError.Message)
 	}
 
@@ -82,23 +81,17 @@ func (a *App) logUserIn(w http.ResponseWriter, r *http.Request, user *models.Use
 		respondWithError(w, 500, err.Error())
 	}
 
-	a.Zlog.Debug("UserID: " + string(user.ID))
-	fmt.Println(user)
-
+	zap.S().Debug("UserID: " + string(user.ID))
 	a.createAndReturnJWT(w, r, user)
 }
 
 func (a *App) loginWithFacebook(w http.ResponseWriter, r *http.Request, code string) {
-	user, userError := oauth.LoginWithFacebook(code, a.config, a.Zlog)
+	user, userError := oauth.LoginWithFacebook(code, a.config)
 	a.logUserIn(w, r, user, userError)
 }
 
 func (a *App) checkToken(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Checking token request type: " + r.Method)
-
 	authHeader := r.Header.Get("Authorization")
-
-	fmt.Println("Authorization Header", authHeader)
 
 	if authHeader == "" {
 		respondWithError(w, 401, "UNAUTHORIZED")
@@ -116,7 +109,7 @@ func (a *App) checkToken(w http.ResponseWriter, r *http.Request) {
 
 	token := authArr[1]
 
-	a.Zlog.Debug("Token " + token)
+	zap.S().Debug("Token " + token)
 
 	a.validateJWT(w, r, token)
 

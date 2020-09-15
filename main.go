@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"go.uber.org/zap"
 	"io/ioutil"
 	"log"
 	"os"
@@ -41,10 +41,14 @@ func main() {
 	}
 
 	logger, err := createLogger(env)
+
 	if err != nil {
 		log.Fatal("Could not create Logger")
 	}
-	logger.Debug("Logger Created")
+
+	zap.ReplaceGlobals(logger)
+
+	zap.S().Debug("Logger Created")
 
 	configFilename := configPath + "config." + env + ".json"
 
@@ -65,37 +69,28 @@ func main() {
 	}
 	privateKey, sshErr := jwt.ParseECPrivateKeyFromPEM(sshPrivateKeyBytes)
 	if sshErr != nil {
-		logger.Error("Private Key ErRR")
+		zap.S().Error("Private Key ErRR")
 		log.Fatal(sshErr)
 	}
 
 	sshPublicKeyBytes, e := ioutil.ReadFile(configuration.PublicKeyPath)
 	if e != nil {
-		logger.Error("Public Key ErRR")
+		zap.S().Error("Public Key ErRR")
 		log.Fatal(sshErr)
 	}
 
-	fmt.Println(string(sshPublicKeyBytes))
-
-	// s := []byte("AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBBIFCofI85aeUfgJ/qxY0f6aKCQNwCBA2GOyAk6y1+qqG4Rbw6OI67ZWvgLO7B/gvFtyZJLFThZHyaP38eO6qbc=")
-	// verifyKey, err := jwt.ParseRSAPublicKeyFromPEM(sshPublicKeyBytes)
-	// 	s := []byte(`
-	// -----BEGIN PUBLIC KEY-----
-	// AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBBIFCofI85aeUfgJ/qxY0f6aKCQNwCBA2GOyAk6y1+qqG4Rbw6OI67ZWvgLO7B/gvFtyZJLFThZHyaP38eO6qbc=
-	// -----END PUBLIC KEY-----`)
+	zap.S().Info(string(sshPublicKeyBytes))
 
 	verifyKey, err := jwt.ParseECPublicKeyFromPEM(sshPublicKeyBytes)
 
 	if err != nil {
-		fmt.Println("Public Key Error")
+		zap.S().Error("Public Key Error")
 		log.Fatal(err)
 	}
-	fmt.Println(verifyKey)
-	// configuration.PublicKeyBytes = sshPublicKeyBytes
 	configuration.PublicKey = verifyKey
 	configuration.PrivateKey = privateKey
 
 	a := App{}
-	a.Initialize(configuration, logger)
+	a.Initialize(configuration)
 	a.Run(":8080")
 }

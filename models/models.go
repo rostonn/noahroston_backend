@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"fmt"
+	"go.uber.org/zap"
 )
 
 type User struct {
@@ -33,10 +34,9 @@ type UserLoginRecord struct {
 
 func (u *User) createUser(db *sql.DB) error {
 	statement := fmt.Sprintf("INSERT INTO USERS(email, last_oauth,login_count) VALUES('%s','%s', %d)", u.Email, u.LastOauth, 1)
-	fmt.Printf("INSERT USER s('%s','%s', %d)", u.Email, u.LastOauth, 1)
 	res, err := db.Exec(statement)
 	if err != nil {
-		fmt.Println("INSERT USER ERR", err)
+		zap.S().Error("INSERT USER ERR", err.Error())
 		return err
 	}
 	// Set user id
@@ -53,12 +53,9 @@ func (uL *UserLoginRecord) CreateUserLoginRecord(db *sql.DB) error {
 		uL.UserID, uL.IpAddress, uL.CountryCode, uL.CountryName, uL.RegionCode,
 		uL.RegionName, uL.City, uL.Zip, uL.Latitude, uL.Longitude, uL.OauthProvider)
 
-	fmt.Println("INSERT LOGIN_RECORD (%d,'%s','%s','%s','%s','%s','%s', '%s', %f, %f, '%s')",
-		uL.UserID, uL.IpAddress, uL.CountryCode, uL.CountryName, uL.RegionCode,
-		uL.RegionName, uL.City, uL.Zip, uL.Latitude, uL.Longitude, uL.OauthProvider)
 	_, err := db.Exec(statement)
 	if err != nil {
-		fmt.Println("INSERT USER LOGIN ERR", err)
+		zap.S().Error("INSERT USER LOGIN ERR", err)
 		return err
 	}
 	return nil
@@ -67,42 +64,33 @@ func (uL *UserLoginRecord) CreateUserLoginRecord(db *sql.DB) error {
 func (u *User) updateUser(db *sql.DB) error {
 	statement := fmt.Sprintf("UPDATE USERS SET last_oauth='%s',login_count=login_count+1 WHERE id=%d", u.LastOauth, u.ID)
 	_, err := db.Exec(statement)
-	fmt.Println("UPDATE USER last_oauth='%s',login_count=login_count+1 WHERE id=%d", u.LastOauth, u.ID)
 	if err != nil {
-		fmt.Println("UPDATE USER ERR", err)
+		zap.S().Error("UPDATE USER ERR", err)
 		return err
 	}
 	return nil
 }
 
 func (u *User) getUser(db *sql.DB) error {
-	statement := fmt.Sprintf("SELECT id,email,last_oauth,created_ts,updated_ts,login_count FROM USERS where email='%s'", u.Email)
-	fmt.Println("GET USER email='%s'", u.Email)
+	statement := fmt.Sprintf("SELECT id,email,created_ts,updated_ts,login_count FROM USERS where email='%s'", u.Email)
 
 	row := db.QueryRow(statement)
-	if err := row.Scan(&u.ID, &u.Email, &u.LastOauth, &u.CreatedTs, &u.UpdatedTs, &u.LoginCount); err != nil {
-		fmt.Println("User Query Error", err)
+	if err := row.Scan(&u.ID, &u.Email, &u.CreatedTs, &u.UpdatedTs, &u.LoginCount); err != nil {
+		zap.S().Error("User Query Error", err)
 		return err
 	}
 
 	return nil
 }
 
-// func getUserLoginRecords(db *sql.DB) ([]UserLoginRecord, error) {
-
-// }
-
 func (u *User) LoginUser(db *sql.DB) error {
 	err := u.getUser(db)
-	fmt.Println("getUser err", err)
 	if err != nil {
-		fmt.Println("Creating user ...")
 		err := u.createUser(db)
 		if err != nil {
 			return err
 		}
 	} else {
-		fmt.Println("Updating User ...")
 		err := u.updateUser(db)
 		if err != nil {
 			return err

@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"go.uber.org/zap"
 	"io/ioutil"
 	"net/http"
 
@@ -14,10 +14,10 @@ func getIpAddressInfo(accessKey, ipAddress string) models.UserLoginRecord {
 
 	var url string
 	if ipAddress == "127.0.0.1" {
-		fmt.Println("Local IP Address ")
+		zap.S().Debug("Local IP Address ")
 		url = "http://api.ipstack.com/check?access_key=" + accessKey
 	} else {
-		fmt.Println("Requestor IP Addres: " + ipAddress)
+		zap.S().Info("Requestor IP Addres: " + ipAddress)
 		url = "http://api.ipstack.com/" + ipAddress + "?access_key=" + accessKey
 	}
 
@@ -25,8 +25,7 @@ func getIpAddressInfo(accessKey, ipAddress string) models.UserLoginRecord {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("IP FETCH ERROR ...")
-		panic(err)
+		zap.S().Error("IP FETCH ERROR ...")
 		return ip
 	}
 

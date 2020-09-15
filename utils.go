@@ -3,13 +3,13 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"go.uber.org/zap"
 	"net"
 	"net/http"
 	"strings"
 )
 
 func getIPAdress(r *http.Request) string {
-	fmt.Println(formatRequest(r))
 	for _, h := range []string{"X-Forwarded-For", "X-Real-Ip"} {
 		addresses := strings.Split(r.Header.Get(h), ",")
 		// march from right to left until we get a public address
@@ -79,7 +79,7 @@ func isPrivateSubnet(ipAddress net.IP) bool {
 			// check if this ip is in a private range
 			if inRange(r, ipAddress) {
 
-				fmt.Println("Private IP Address", ipAddress)
+				zap.S().Debug("Private IP Address", ipAddress)
 
 				return true
 			}

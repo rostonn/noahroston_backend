@@ -18,18 +18,14 @@ type App struct {
 	Router *mux.Router
 	DB     *sql.DB
 	config app.Configuration
-	Zlog   *zap.Logger
 }
 
-func (a *App) Initialize(config app.Configuration, logger *zap.Logger) {
-	a.Zlog = logger
+func (a *App) Initialize(config app.Configuration) {
 	// db, err := sql.Open("mysql", "db_user:password@tcp(localhost:3306)/my_db")
 	connectionString := fmt.Sprintf("%s:%s@%s", config.DbUsername, config.DbPassword, config.Dbname)
 	var err error
 
-	a.Zlog.Debug("DB INFO",
-		zap.String("Username", config.DbUsername),
-		zap.String("DBName", config.Dbname))
+	zap.S().Debug("DB INFO ",config.DbUsername," ",config.Dbname)
 
 	a.DB, err = sql.Open("mysql", connectionString)
 	if err != nil {

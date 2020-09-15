@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"go.uber.org/zap"
 	"net/http"
 	"time"
 
@@ -15,7 +16,7 @@ type CustomClaims struct {
 }
 
 func (a *App) validateJWT(w http.ResponseWriter, r *http.Request, token string) {
-	a.Zlog.Debug("Validating JWT " + token)
+	zap.S().Debug("Validating JWT " + token)
 
 	var myClaims CustomClaims
 	t, err := jwt.ParseWithClaims(token, &myClaims, func(token *jwt.Token) (interface{}, error) {
@@ -23,19 +24,13 @@ func (a *App) validateJWT(w http.ResponseWriter, r *http.Request, token string) 
 	})
 
 	if err != nil {
-		fmt.Println(err)
-		a.Zlog.Error("Token Error")
+		zap.S().Error(err)
+		zap.S().Error("Token Error")
 		respondWithError(w, 401, "Error Creating JWT")
 		return
 	}
 
-	fmt.Println("Expires At", myClaims.ExpiresAt)
-	fmt.Println("Check Expires", myClaims.VerifyExpiresAt)
-	fmt.Println(myClaims.User.Email)
-	fmt.Println(myClaims.User.LastOauth)
-	fmt.Println("Token is valid responding")
-
-	fmt.Println(t.Claims)
+	zap.S().Debug(t.Claims)
 
 	w.Write(nil)
 }
@@ -44,7 +39,7 @@ func (a *App) createAndReturnJWT(w http.ResponseWriter, r *http.Request, user *m
 
 	ipAddress := getIPAdress(r)
 
-	a.Zlog.Info("IP " + ipAddress)
+	zap.S().Info("IP " + ipAddress)
 
 	userLoginRecord := getIpAddressInfo(a.config.IpStackApiKey, ipAddress)
 
@@ -58,7 +53,7 @@ func (a *App) createAndReturnJWT(w http.ResponseWriter, r *http.Request, user *m
 		panic(err)
 	}
 
-	a.Zlog.Debug("Creating JWT")
+	zap.S().Debug("Creating JWT")
 	user.UserLoginRecord = userLoginRecord
 
 	claims := CustomClaims{
@@ -72,10 +67,10 @@ func (a *App) createAndReturnJWT(w http.ResponseWriter, r *http.Request, user *m
 	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
 	ss, err := token.SignedString(a.config.PrivateKey)
 	ssString := fmt.Sprintf("%v %v", ss, err)
-	a.Zlog.Debug(ssString)
+	zap.S().Debug(ssString)
 
 	if err != nil {
-		a.Zlog.Error("JWT ERROR")
+		zap.S().Error("JWT ERROR")
 		respondWithError(w, 500, "Error Creating JWT")
 	}
 	w.WriteHeader(200)
